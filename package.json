@@ -1,0 +1,41 @@
+{
+  "name": "nukoboard-contracts",
+  "version": "0.0.1",
+  "description": "Contracts for nukoboard",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cupmouse/Nukoboard-Contracts.git"
+  },
+  "keywords": [
+    "decentralized",
+    "messageboard",
+    "nekonium",
+    "ethereum",
+    "contract",
+    "dapp"
+  ],
+  "author": "Cupmouse",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Cupmouse/Nukoboard-Contracts/issues"
+  },
+  "homepage": "https://github.com/Cupmouse/Nukoboard-Contracts#readme",
+  "dependencies": {
+    "zeppelin-solidity": "1.7.0"
+  },
+  "devDependencies": {
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "babel-preset-stage-3": "^6.24.1",
+    "babel-register": "^6.26.0"
+  }
+}
