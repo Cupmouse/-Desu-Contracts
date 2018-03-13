@@ -1,7 +1,7 @@
 {
-  "name": "nukoboard-contracts",
+  "name": "desu-contracts",
   "version": "0.0.1",
-  "description": "Contracts for nukoboard",
+  "description": "Contracts for Desu decentralized message board",
   "main": "truffle-config.js",
   "directories": {
     "test": "test"
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Cupmouse/Nukoboard-Contracts.git"
+    "url": "git+https://github.com/Cupmouse/Desu-Contracts.git"
   },
   "keywords": [
     "decentralized",
@@ -24,9 +24,9 @@
   "author": "Cupmouse",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/Cupmouse/Nukoboard-Contracts/issues"
+    "url": "https://github.com/Cupmouse/Desu-Contracts/issues"
   },
-  "homepage": "https://github.com/Cupmouse/Nukoboard-Contracts#readme",
+  "homepage": "https://github.com/Cupmouse/Desu-Contracts#readme",
   "dependencies": {
     "zeppelin-solidity": "1.7.0"
   },
