@@ -8,12 +8,12 @@ contract Board {
     /**
      * Get a thread at index provided
      */
-    function getThread(uint index) public view returns (Thread thread);
+    function getThreadAt(uint index) public view returns (Thread thread);
     
     /**
-     * Get a threads list ascending ordered by added time
+     * Get a thread array ascending ordered by added time
      */
-    function getThreads(uint index) public view returns (Thread[] threads, uint foundCount);
+    function getThreadArray(uint index, uint maxCount) public view returns (Thread[] threads, uint foundCount);
     
     /**
      * Throw if...
