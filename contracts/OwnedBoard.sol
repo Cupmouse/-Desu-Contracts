@@ -1,6 +1,7 @@
 pragma solidity ^0.4.19;
 
 import "./interfaces/RegistrableBoard.sol";
+import "./interfaces/Thread.sol"
 import "./ThreadList.sol";
 
 
@@ -30,6 +31,10 @@ contract OwnedBoard is RegistrableBoard {
     
     function getThread(uint index) public view returns (Thread thread) {
         return threadList.get(index);
+    }
+    
+    function getThreads(uint startIndex, uint maxCount) public view returns (Thread[] threads, uint foundCount) {
+        return threadList.getSeq(startIndex, maxCount);
     }
     
     function testVersionCompatible(Thread thread) internal view {

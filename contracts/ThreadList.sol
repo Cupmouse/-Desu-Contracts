@@ -76,6 +76,35 @@ contract ThreadList {
     }
     
     /**
+     * Get the threads array that maximum size is maxCount and from startIndex
+     */
+    function getSeq(uint startIndex, uint maxCount) external view returns (Thread[] threads, uint foundCount) {
+        Thread[] memory threadSeq = new Thread[](maxCount);
+        uint count = 0;
+        // Get internal index of startIndex, if startIndex exceeds list size then reverts
+        uint cur = getInternalIndexOf(startIndex);
+        // Don't set initial value because cur might represents 'no more elements'
+        ListElement memory curElem;
+        
+        while (cur != UINT_LARGEST) {
+            curElem = elements[cur];
+            // Set thread cursor on to an array
+            threadSeq[count] = curElem.thread;
+            
+            // Increment count and move to the next list element
+            count++;
+            cur = curElem.next;
+            
+            if (count >= maxCount) {
+                // If we reached maxCount, get out of this loop!
+                break;
+            }
+        }
+        
+        return (threadSeq, count);
+    }
+    
+    /**
      * Get the size of this list
      */
     function getSize() external view returns (uint _size) {
