@@ -47,6 +47,8 @@ contract OwnedBoard is RegistrableBoard {
     }
     
     function getThreadArray(uint startIndex, uint maxCount) public view returns (Thread[] threads, uint foundCount) {
+        // require(startIndex + maxCount <= size); don't need this
+
         Thread[] memory threadSeq = new Thread[](maxCount);
         uint count = 0;
         // Get internal index of startIndex, if startIndex exceeds list size then reverts

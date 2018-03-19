@@ -30,16 +30,23 @@ contract('OwnedBoard', async (accounts) => {
   const callGetSize = async () => await ownedBoard.getSize.call({from: accounts[1]});
 
   const assertThreadArray = async () => {
-    assert.equal(await callGetSize(), expectedList.length, 'Wrong size');
-    const result = await ownedBoard.getThreadArray.call(0, expectedList.length, {from: accounts[1]});
+    const size = (await callGetSize()).toNumber();
+    assert.equal(size, expectedList.length, 'Wrong size');
 
-    // result[1] is actual size of array contains thread address
-    assert.equal(result[1].toNumber(), expectedList.length, 'getThreadArray returned size wrong');
+    if (size === 0) {
+      // Size is zero, there is no data, it should revert
+      await assertRevert(ownedBoard.getThreadArray.call(0, expectedList.length, {from: accounts[1]}));
+    } else {
+      const result = await ownedBoard.getThreadArray.call(0, expectedList.length, {from: accounts[1]});
 
-    const threads = result[0].slice(0, result[1]);
+      // result[1] is actual size of array contains thread address
+      assert.equal(result[1].toNumber(), expectedList.length, 'getThreadArray returned size wrong');
 
-    for (let i = 0; i < expectedList.length; i++) {
-      assert.equal(threads[i], expectedList[i], `Non desired element for index ${i}`);
+      const threads = result[0].slice(0, result[1]);
+
+      for (let i = 0; i < expectedList.length; i++) {
+        assert.equal(threads[i], expectedList[i], `Non desired element for index ${i}`);
+      }
     }
 
     for (let i = 0; i < removedThreads + 1; i++) {
@@ -82,6 +89,7 @@ contract('OwnedBoard', async (accounts) => {
     const newThread = await OwnedThread.new('its the third one', 'are\'n you board by now', {from: accounts[0]});
 
     await addThread(newThread.address, accounts[0]);
+    // await ownedBoard.registerThread(newThread.address, {from: accounts[0]}); here for checking checking method lol
     await assertThreadArray();
   });
 
