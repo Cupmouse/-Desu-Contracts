@@ -15,9 +15,6 @@ contract OwnedThread is PostRemovableThread {
         string text;
     }
     
-    bytes32 constant private VERSION = "cupmouse-0.0.1";
-    bytes32 constant private SUB_VERSION = "owned";
-    
     address constant private NYAN_ADDRESS = 0x2222222222222222222222222222222222222222;
     
     address private owner;
@@ -69,10 +66,6 @@ contract OwnedThread is PostRemovableThread {
         PostRemoved(msg.sender, postNumber);    // Call the event
         
         return true;
-    }
-    
-    function getNukoboardThreadVersion() public view returns (bytes32) {
-        return VERSION;
     }
     
     /**

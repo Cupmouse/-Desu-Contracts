@@ -1,10 +1,10 @@
 pragma solidity ^0.4.19;
 
-import "./interfaces/RegistrableBoard.sol";
-import "./interfaces/Thread.sol";
+import "./interfaces/Board.sol";
+import "./OwnedThread.sol";
 
 
-contract OwnedBoard is RegistrableBoard {
+contract OwnedBoard is Board {
     modifier ownerOnly {
         require(msg.sender == owner);
         _;
@@ -21,7 +21,7 @@ contract OwnedBoard is RegistrableBoard {
      * uint maximum value, used for marking terminals of list
      */
     uint constant private UINT_LARGEST = 2**255 - 1;
-    bytes32 constant private COMPATIBLE_THREAD_VERSION = "cupmouse-0.0.1";    // Probably not needed
+    bytes32 constant private VERSION = "cupmouse-0.0.1";    // Probably not needed
 
     address public owner;
     
@@ -34,23 +34,24 @@ contract OwnedBoard is RegistrableBoard {
         owner = msg.sender;
     }
     
-    function registerThread(Thread thread) external returns (bool success) {
-        testVersionCompatible(thread);  // Test if thread is actually Thread contract and also its version
+    function makeNewThread(string title, string text) public {
+        // Create new thread contract
+        Thread newThread = new OwnedThread(title, text);
         
         // Add thread at the top of the list
         uint added_iindex = listElements.length++;  // Get index number and widen array by one
         require(added_iindex < UINT_LARGEST);  // Check if it reached the uint maximum, if do throw (probably never happens)
         
-        if (added_iindex == 0) {
+        if (first == UINT_LARGEST) {
             // It's the very first element
             // Add the very first element to list
-            listElements[added_iindex] = ListElement(UINT_LARGEST, UINT_LARGEST, thread);
+            listElements[added_iindex] = ListElement(UINT_LARGEST, UINT_LARGEST, newThread);
             
             // First element to be added to the list, last element is also this one
             last = added_iindex;
         } else {
             // Add new element to this list as first
-            listElements[added_iindex] = ListElement(UINT_LARGEST, first, thread);
+            listElements[added_iindex] = ListElement(UINT_LARGEST, first, newThread);
             
             // Connect added element to previous the first element
             ListElement memory nextElement = listElements[first];
@@ -63,7 +64,7 @@ contract OwnedBoard is RegistrableBoard {
         
         size++;
         
-        return true;
+        NewThread(msg.sender, newThread);
     }
 
     // TODO This is not good. If another tx that will remove or add a thread was executed before calling this,
@@ -192,9 +193,5 @@ contract OwnedBoard is RegistrableBoard {
                 count++;
             }
         }
-    }
-    
-    function testVersionCompatible(Thread thread) internal view {
-        require(thread.getNukoboardThreadVersion() == COMPATIBLE_THREAD_VERSION);
     }
 }

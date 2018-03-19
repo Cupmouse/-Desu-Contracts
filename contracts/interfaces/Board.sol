@@ -4,6 +4,10 @@ import "./Thread.sol";
 
 
 contract Board {
+    /**
+     * Event called when new thread is made
+     */
+    event NewThread(address poster, Thread thread);
     
     /**
      * Get a thread at index provided
@@ -16,9 +20,8 @@ contract Board {
     function getThreadArray(uint index, uint maxCount) public view returns (Thread[] threads, uint foundCount);
     
     /**
-     * Throw if...
-     * 1. thread was NOT actually thread contract
-     * 2. thread was NOT compatible with this board
+     * Make new thread in this board
+     * Newly created thread will be placed at the top in board (index = 0)
      */
-    function testVersionCompatible(Thread thread) internal view;
+    function makeNewThread(string title, string text) public;
 }

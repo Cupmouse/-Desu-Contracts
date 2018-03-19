@@ -34,9 +34,4 @@ contract Thread {
      * Return a text of a post
      */
     function getPostText(uint postNumber) public view returns (string);
-    
-    /**
-     * Return version of the implemented thread, also used for checking if it is actually thread contract
-     */
-    function getNukoboardThreadVersion() public view returns (bytes32);
 }
