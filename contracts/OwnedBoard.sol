@@ -18,10 +18,10 @@ contract OwnedBoard is RegistrableBoard {
     }
     
     /**
-     * uint maximum value, used for marking of terminals of list
+     * uint maximum value, used for marking terminals of list
      */
     uint constant private UINT_LARGEST = 2**255 - 1;
-    bytes32 constant private COMPATIBLE_THREAD_VERSION = "cupmouse-0.0.1";
+    bytes32 constant private COMPATIBLE_THREAD_VERSION = "cupmouse-0.0.1";    // Probably not needed
 
     address public owner;
     
@@ -37,11 +37,62 @@ contract OwnedBoard is RegistrableBoard {
     function registerThread(Thread thread) external returns (bool success) {
         testVersionCompatible(thread);  // Test if thread is actually Thread contract and also its version
         
-        addFirst(thread);    // Add thread at the top of the list
+        // Add thread at the top of the list
+        uint added_iindex = listElements.length++;  // Get index number and widen array by one
+        require(added_iindex < UINT_LARGEST);  // Check if it reached the uint maximum, if do throw (probably never happens)
+        
+        if (added_iindex == 0) {
+            // It's the very first element
+            // Add the very first element to list
+            listElements[added_iindex] = ListElement(UINT_LARGEST, UINT_LARGEST, thread);
+            
+            // First element to be added to the list, last element is also this one
+            last = added_iindex;
+        } else {
+            // Add new element to this list as first
+            listElements[added_iindex] = ListElement(UINT_LARGEST, first, thread);
+            
+            // Connect added element to previous the first element
+            ListElement memory nextElement = listElements[first];
+            // Update next element's reference to neighbor
+            listElements[first] = ListElement(added_iindex, nextElement.next, nextElement.thread);
+        }
+        
+        // Added element is the first element of this list
+        first = added_iindex;
+        
+        size++;
         
         return true;
     }
-    
+
+    // TODO This is not good. If another tx that will remove or add a thread was executed before calling this,
+    // it won't be removed as executor thought as thread's index will be different
+    /**
+     * Remove thread from this list positioned at the provided index
+     */
+     function removeThread(uint index) public returns (bool success) {
+         uint internalIndex = getInternalIndexOf(index);
+         uint previousIIndex = listElements[internalIndex].previous;
+         uint nextIIndex = listElements[internalIndex].next;
+         
+         if (previousIIndex != UINT_LARGEST) {
+             // There is a previous element, it is not the first element in this list
+             // Skip this element and connect the previous element to the next element
+             listElements[previousIIndex].next = nextIIndex;
+         } else first = listElements[internalIndex].next;   // It is the first element, give the 'first' to next one
+         
+         if (nextIIndex != UINT_LARGEST) {
+             // There is a next element, it is not the last element in this list
+             // Skip this element and connet the next element to the previous element
+             listElements[nextIIndex].previous = previousIIndex;
+         } else last = listElements[internalIndex].previous;// Same as changing first, give the 'last' to next one
+
+         size--;    // Size is decreased by 1
+
+         return true;
+     }
+     
     function getThreadAt(uint index) public view returns (Thread thread) {
         return listElements[getInternalIndexOf(index)].thread;
     }
@@ -76,37 +127,6 @@ contract OwnedBoard is RegistrableBoard {
 
     function destructBoard() public ownerOnly {
         selfdestruct(owner);
-    }
-    
-    /**
-     * Add provided thread to this list as the first element
-     * It won't throw even if provided thread variable is not Thread contract
-     */
-    function addFirst(Thread thread) private {
-        uint added_iindex = listElements.length++;  // Get index number and widen array by one
-        require(added_iindex < UINT_LARGEST);  // Check if it reached the uint maximum, if do throw (probably never happens)
-        
-        if (added_iindex == 0) {
-            // It's the very first element
-            // Add the very first element to list
-            listElements[added_iindex] = ListElement(UINT_LARGEST, UINT_LARGEST, thread);
-            
-            // First element to be added to the list, last element is also this one
-            last = added_iindex;
-        } else {
-            // Add new element to this list as first
-            listElements[added_iindex] = ListElement(UINT_LARGEST, first, thread);
-            
-            // Connect added element to previous the first element
-            ListElement memory nextElement = listElements[first];
-            // Update next element's reference to neighbor
-            listElements[first] = ListElement(added_iindex, nextElement.next, nextElement.thread);
-        }
-        
-        // Added element is the first element of this list
-        first = added_iindex;
-        
-        size++;
     }
     
     /**
@@ -173,31 +193,6 @@ contract OwnedBoard is RegistrableBoard {
             }
         }
     }
-    
-    /**
-     * Remove thread from this list positioned at the provided index
-     */
-     function remove(uint index) public returns (bool success) {
-         uint internalIndex = getInternalIndexOf(index);
-         uint previousIIndex = listElements[internalIndex].previous;
-         uint nextIIndex = listElements[internalIndex].next;
-         
-         if (previousIIndex != UINT_LARGEST) {
-             // There is a previous element, it is not the first element in this list
-             // Skip this element and connect the previous element to the next element
-             listElements[previousIIndex].next = nextIIndex;
-         } else first = listElements[internalIndex].next;   // It is the first element, give the 'first' to next one
-         
-         if (nextIIndex != UINT_LARGEST) {
-             // There is a next element, it is not the last element in this list
-             // Skip this element and connet the next element to the previous element
-             listElements[nextIIndex].previous = previousIIndex;
-         } else last = listElements[internalIndex].previous;// Same as changing first, give the 'last' to next one
-
-         size--;    // Size is decreased by 1
-
-         return true;
-     }
     
     function testVersionCompatible(Thread thread) internal view {
         require(thread.getNukoboardThreadVersion() == COMPATIBLE_THREAD_VERSION);
