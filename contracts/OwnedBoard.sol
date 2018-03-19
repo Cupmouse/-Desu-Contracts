@@ -66,36 +66,26 @@ contract OwnedBoard is Board {
         
         NewThread(msg.sender, newThread);
     }
-
-    // TODO This is not good. If another tx that will remove or add a thread was executed before calling this,
-    // it won't be removed as executor thought as thread's index will be different
-    /**
-     * Remove thread from this list positioned at the provided index
-     */
-     function removeThread(uint index) public returns (bool success) {
-         uint internalIndex = getInternalIndexOf(index);
-         uint previousIIndex = listElements[internalIndex].previous;
-         uint nextIIndex = listElements[internalIndex].next;
-         
-         if (previousIIndex != UINT_LARGEST) {
-             // There is a previous element, it is not the first element in this list
-             // Skip this element and connect the previous element to the next element
-             listElements[previousIIndex].next = nextIIndex;
-         } else first = listElements[internalIndex].next;   // It is the first element, give the 'first' to next one
-         
-         if (nextIIndex != UINT_LARGEST) {
-             // There is a next element, it is not the last element in this list
-             // Skip this element and connet the next element to the previous element
-             listElements[nextIIndex].previous = previousIIndex;
-         } else last = listElements[internalIndex].previous;// Same as changing first, give the 'last' to next one
-
-         size--;    // Size is decreased by 1
-
-         return true;
-     }
      
     function getThreadAt(uint index) public view returns (Thread thread) {
         return listElements[getInternalIndexOf(index)].thread;
+    }
+    
+    function getFirstThread() public view returns (Thread thread) {
+        require(first != UINT_LARGEST);
+        return listElements[first].thread;
+    }
+    
+    /**
+     * Get the last thread of this board
+     */
+    function getLastThread() public view returns (Thread thread) {
+        require(last != UINT_LARGEST);
+        return listElements[last].thread;
+    }
+    
+    function getNumberOfThreads() public view returns (uint numberOfThreads) {
+        return size;
     }
     
     function getThreadArray(uint startIndex, uint maxCount) public view returns (Thread[] threads, uint foundCount) {
@@ -126,31 +116,35 @@ contract OwnedBoard is Board {
         return (threadSeq, count);
     }
 
+    // TODO This is not good. If another tx that will remove or add a thread was executed before calling this,
+    // it won't be removed as executor thought as thread's index will be different
+    /**
+     * Remove thread from this list positioned at the provided index
+     */
+     function removeThread(uint index) public returns (bool success) {
+         uint internalIndex = getInternalIndexOf(index);
+         uint previousIIndex = listElements[internalIndex].previous;
+         uint nextIIndex = listElements[internalIndex].next;
+         
+         if (previousIIndex != UINT_LARGEST) {
+             // There is a previous element, it is not the first element in this list
+             // Skip this element and connect the previous element to the next element
+             listElements[previousIIndex].next = nextIIndex;
+         } else first = listElements[internalIndex].next;   // It is the first element, give the 'first' to next one
+         
+         if (nextIIndex != UINT_LARGEST) {
+             // There is a next element, it is not the last element in this list
+             // Skip this element and connet the next element to the previous element
+             listElements[nextIIndex].previous = previousIIndex;
+         } else last = listElements[internalIndex].previous;// Same as changing first, give the 'last' to next one
+
+         size--;    // Size is decreased by 1
+
+         return true;
+     }
+
     function destructBoard() public ownerOnly {
         selfdestruct(owner);
-    }
-    
-    /**
-     * Get the first thread of this list
-     */
-    function getFirst() external view returns (Thread thread) {
-        require(first != UINT_LARGEST);
-        return listElements[first].thread;
-    }
-    
-    /**
-     * Get the last thread of this list
-     */
-    function getLast() external view returns (Thread thread) {
-        require(last != UINT_LARGEST);
-        return listElements[last].thread;
-    }
-    
-    /**
-     * Get the size of this list
-     */
-    function getSize() external view returns (uint _size) {
-        return size;
     }
     
     /**

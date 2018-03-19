@@ -23,7 +23,7 @@ contract('OwnedBoard', async (accounts) => {
 
   const callGetThread = async (index) => await ownedBoard.getThreadAt.call(index, {from: accounts[1]});
 
-  const callGetSize = async () => await ownedBoard.getSize.call({from: accounts[1]});
+  const callGetSize = async () => await ownedBoard.getNumberOfThreads.call({from: accounts[1]});
 
   const assertThreadArray = async () => {
     const size = (await callGetSize()).toNumber();
