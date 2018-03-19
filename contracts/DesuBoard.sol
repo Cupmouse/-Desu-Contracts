@@ -1,15 +1,10 @@
 pragma solidity ^0.4.19;
 
-import "./interfaces/Board.sol";
-import "./OwnedThread.sol";
+import "./interfaces/OwnedBoard.sol";
+import "./DesuThread.sol";
 
 
-contract OwnedBoard is Board {
-    modifier ownerOnly {
-        require(msg.sender == owner);
-        _;
-    }
-    
+contract DesuBoard is OwnedBoard {
     struct ListElement {
         uint previous;
         uint next;
@@ -22,21 +17,17 @@ contract OwnedBoard is Board {
      */
     uint constant private UINT_LARGEST = 2**255 - 1;
     bytes32 constant private VERSION = "cupmouse-0.0.1";    // Probably not needed
-
-    address public owner;
     
     ListElement[] private listElements;
     uint private first = 0;
     uint private last = 0;
     uint private size = 0;
 
-    function OwnedBoard() public {
-        owner = msg.sender;
-    }
+    function DesuBoard() public Owned(msg.sender) { }
     
     function makeNewThread(string title, string text) public {
         // Create new thread contract
-        Thread newThread = new OwnedThread(title, text);
+        Thread newThread = new DesuThread(this, title, text);
         
         // Add thread at the top of the list
         uint added_iindex = listElements.length++;  // Get index number and widen array by one

@@ -1,14 +1,9 @@
 pragma solidity ^0.4.19;
 
-import "./interfaces/PostRemovableThread.sol";
+import "./interfaces/OwnedThread.sol";
 
 
-contract OwnedThread is PostRemovableThread {
-    modifier ownerOnly {
-        require(msg.sender == owner);
-        _;
-    }
-    
+contract DesuThread is OwnedThread {
     struct Post {
         address poster;
         uint timestamp;
@@ -17,28 +12,24 @@ contract OwnedThread is PostRemovableThread {
     
     address constant private NYAN_ADDRESS = 0x2222222222222222222222222222222222222222;
     
-    address private owner;
     string private title;
     Post[] private posts;
     
-    function OwnedThread(string _title, string text) public {
+    function DesuThread(DesuBoard board, string _title, string text) public Owned() {
         require(bytes(text).length != 0);  // No content not allowed
-        owner = msg.sender;
         
         title = _title;
         posts.length++; // Allocate a new array element
         posts[0] = Post(msg.sender, now, text);
     }
     
-    function post(string text) external returns (bool success) {
+    function post(string text) public {
         require(bytes(text).length != 0);  // Reject if there is no content
         
         uint postNumber = posts.length++;  // Increase array size by 1
         posts[postNumber] = Post(msg.sender, now, text);    // now means block.timestamp
         
         NewPost(msg.sender, postNumber);   // Call event NewPost
-        
-        return true;
     }
     
     function getTitle() public view returns (string _title) {
@@ -57,15 +48,13 @@ contract OwnedThread is PostRemovableThread {
         return posts[postNumber].text;
     }
     
-    function removePost(uint postNumber) external ownerOnly returns (bool success) {
+    function removePost(uint postNumber) public ownerOnly {
         require(postNumber < posts.length);
         require(postNumber != 0);    // The first post can not be removed, if you want to, use destructThread
         
         posts[postNumber] = Post(NYAN_ADDRESS, 0, "にゃーん");
         
-        PostRemoved(msg.sender, postNumber);    // Call the event
-        
-        return true;
+        PostRemoved(postNumber);    // Call the event
     }
     
     /**
