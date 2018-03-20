@@ -26,6 +26,9 @@ contract ManageableThread is Thread {
     
     /**
      * Remove the post located at index provided
+     * You can not remove the first post (postNumber == 0)
+     * If you want to remove it, you have to use destructThread().
+     * Please note destructThread() will delete all of posts on the thread from current state.
      * Only board owner should be able to call
      */
     function removePost(uint index) public;

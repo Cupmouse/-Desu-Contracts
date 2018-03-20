@@ -47,6 +47,7 @@ contract Thread {
      * Also return foundCount which shows how many actual post is included in posters.
      * If foundCount is 0 then there is no post found, more than 0 then only posters[0] ... posters[foundCount - 1]
      * contains actual results.
+     * Revert if fromPostNumber is out of bounds (fromPostNumber < numberOfPosts)
      */
     function getPosterArray(uint fromPostNumber, uint maxCount) public view returns (address[] posters, uint foundCount);
     
@@ -56,6 +57,7 @@ contract Thread {
      * Also return foundCount which shows how many actual post is included in timestamps.
      * If foundCount is 0 then there is no post found, more than 0 then only timestamps[0] ... timestamps[foundCount - 1]
      * contains actual results.
+     * Revert if fromPostNumber is out of bounds (fromPostNumber < numberOfPosts)
      */
     function getPostTimestampArray(uint fromPostNumber, uint maxCount) public view returns (uint[] timestamps, uint foundCount);
     
@@ -65,6 +67,12 @@ contract Thread {
      * Also return foundCount which shows how many actual post is included in texts.
      * If foundCount is 0 then there is no post found, more than 0 then only texts[0] ... texts[foundCount - 1]
      * contains actual results.
+     * Revert if fromPostNumber is out of bounds (fromPostNumber < numberOfPosts)
      */
     function getPostTexts(uint fromPostNumber, uint maxCount) public view returns (string[] texts, uint foundCount);
+    
+    /**
+     * Return an number of posts this thread have
+     */
+    function getNumberOfPosts() public view returns (uint numberOfPosts);
 }

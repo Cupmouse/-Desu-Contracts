@@ -1,4 +1,5 @@
 pragma solidity ^0.4.19;
+pragma experimental ABIEncoderV2;
 
 import "./interfaces/ManageableThread.sol";
 import "./DesuBoard.sol";
@@ -49,6 +50,57 @@ contract DesuThread is ManageableThread {
         return posts[postNumber].text;
     }
     
+    function getPostAt(uint postNumber) public view returns (address _poster, uint timestamp, string text) {
+        Post memory postAt = posts[postNumber];
+        return (postAt.poster, postAt.timestamp, postAt.text);
+    }
+    
+    function getPosterArray(uint fromPostNumber, uint maxCount) public view returns (address[] posters, uint foundCount) {
+        require(fromPostNumber < posts.length);
+        
+        address[] memory rtn = new address[](maxCount);
+        
+        uint limitCount = calcLimitCount(fromPostNumber, maxCount);
+        
+        for (uint i = 0; i < limitCount; i++) {
+            rtn[i] =  posts[fromPostNumber + i].poster;
+        }
+        
+        return (rtn, limitCount);
+    }
+    
+    function getPostTimestampArray(uint fromPostNumber, uint maxCount) public view returns (uint[] timestamps, uint foundCount) {
+        require(fromPostNumber < posts.length);
+        
+        uint[] memory rtn = new uint[](maxCount);
+        
+        uint limitCount = calcLimitCount(fromPostNumber, maxCount);
+        
+        for (uint i = 0; i < limitCount; i++) {
+            rtn[i] =  posts[fromPostNumber + i].timestamp;
+        }
+        
+        return (rtn, limitCount);
+    }
+    
+    function getPostTexts(uint fromPostNumber, uint maxCount) public view returns (string[] texts, uint foundCount) {
+        require(fromPostNumber < posts.length);
+        
+        string[] memory rtn = new string[](maxCount);
+        
+        uint limitCount = calcLimitCount(fromPostNumber, maxCount);
+        
+        for (uint i = 0; i < limitCount; i++) {
+            rtn[i] =  posts[fromPostNumber + i].text;
+        }
+        
+        return (rtn, limitCount);
+    }
+    
+    function getNumberOfPosts() public view returns (uint numberOfPosts) {
+        return posts.length;
+    }
+    
     function removePost(uint postNumber) public boardOwnerOnly {
         require(postNumber < posts.length);
         require(postNumber != 0);    // The first post can not be removed, if you want to, use destructThread
@@ -60,5 +112,15 @@ contract DesuThread is ManageableThread {
     
     function destructThread() public boardOwnerOnly {
         selfdestruct(parentBoard.getOwner());
+    }
+    
+    /**
+     * For shortening source code
+     */
+    function calcLimitCount(uint fromPostNumber, uint maxCount) private view returns (uint limitCount) {
+        if (posts.length <= fromPostNumber + maxCount)
+            return posts.length - fromPostNumber - 1;
+        else
+            return fromPostNumber + maxCount - 1;
     }
 }

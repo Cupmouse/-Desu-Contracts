@@ -4,6 +4,10 @@ import "./interfaces/ManageableBoard.sol";
 import "./DesuThread.sol";
 
 
+/**
+ * In lock state, tx from NON owner address that make changes to a board will be rejected&reverted.
+ * So only owner can call those functions when a board is locked.
+ */
 contract DesuBoard is ManageableBoard {
     struct ListElement {
         uint previous;
@@ -12,20 +16,41 @@ contract DesuBoard is ManageableBoard {
         Thread thread;
     }
     
+    modifier ownerOnlyOnLocked {
+        require(msg.sender == owner);
+        require(boardLock);
+        _;
+    }
+    
+    // Avoiding similar name to onlyOwnerOnLocked
+    modifier lockAffectable {
+        if (msg.sender != owner)
+            require(!boardLock);    // Non owner can only get permission when a board is not locked
+        _;
+    }
+    
+    modifier ownerOnlyLockAffectable {
+        require(msg.sender == owner);
+        _;
+    }
+    
     /**
      * uint maximum value, used for marking terminals of list
      */
     uint constant private UINT_LARGEST = 2**255 - 1;
-    bytes32 constant private VERSION = "cupmouse-0.0.1";    // Probably not needed
     
+    // List
     ListElement[] private listElements;
     uint private first = 0;
     uint private last = 0;
     uint private size = 0;
+    
+    // Properties of board
+    bool private boardLock = false;
 
     function DesuBoard() public ManageableBoard(msg.sender) { }
     
-    function makeNewThread(string title, string text) public {
+    function makeNewThread(string title, string text) public lockAffectable {
         // Create new thread contract
         // Most explorer is not supporting tracking of this newly created contract
         // It creates ACTUAL contract on the blockchain that have an address
@@ -61,7 +86,7 @@ contract DesuBoard is ManageableBoard {
     }
      
     function getThreadAt(uint index) public view returns (Thread thread) {
-        return listElements[getInternalIndexOf(index)].thread;
+        return listElements[getInternalIdOfIndex(index)].thread;
     }
     
     function getFirstThread() public view returns (Thread thread) {
@@ -87,7 +112,7 @@ contract DesuBoard is ManageableBoard {
         Thread[] memory threadSeq = new Thread[](maxCount);
         uint count = 0;
         // Get internal index of startIndex, if startIndex exceeds list size then reverts
-        uint cur = getInternalIndexOf(startIndex);
+        uint cur = getInternalIdOfIndex(startIndex);
         // Don't set initial value because cur might represents 'no more elements'
         ListElement memory curElem;
         
@@ -108,43 +133,8 @@ contract DesuBoard is ManageableBoard {
         
         return (threadSeq, count);
     }
-
-    // TODO This is not good. If another tx that will remove or add a thread was executed before calling this,
-    // it won't be removed as executor thought as thread's index will be different
-    /**
-     * Remove thread from this list positioned at the provided index
-     */
-     function removeThread(uint index) public returns (bool success) {
-         uint internalIndex = getInternalIndexOf(index);
-         uint previousIIndex = listElements[internalIndex].previous;
-         uint nextIIndex = listElements[internalIndex].next;
-         
-         if (previousIIndex != UINT_LARGEST) {
-             // There is a previous element, it is not the first element in this list
-             // Skip this element and connect the previous element to the next element
-             listElements[previousIIndex].next = nextIIndex;
-         } else first = listElements[internalIndex].next;   // It is the first element, give the 'first' to next one
-         
-         if (nextIIndex != UINT_LARGEST) {
-             // There is a next element, it is not the last element in this list
-             // Skip this element and connet the next element to the previous element
-             listElements[nextIIndex].previous = previousIIndex;
-         } else last = listElements[internalIndex].previous;// Same as changing first, give the 'last' to next one
-
-         size--;    // Size is decreased by 1
-
-         return true;
-     }
-
-    function destructBoard() public ownerOnly {
-        selfdestruct(owner);
-    }
     
-    /**
-     * Get the internal index of the element in this list which index is provided
-     * Either looked up from the first or the last
-     */
-    function getInternalIndexOf(uint index) private view returns (uint internalIndex) {
+    function getInternalIdOfIndex(uint index) public view returns (uint internalId) {
         require(index < size);  // Index out of size
         
         if (size == 1)
@@ -180,5 +170,44 @@ contract DesuBoard is ManageableBoard {
                 count++;
             }
         }
+    }
+    
+    function detachThreadByIndex(uint index) public ownerOnlyOnLocked {
+        detachThreadByInternalId(getInternalIdOfIndex(index));
+    }
+    
+    function detachThreadByInternalId(uint internalId) public ownerOnlyLockAffectable {
+        require(internalId < listElements.length);  // Exceeding a bound
+        
+        uint previousId = listElements[internalId].previous;
+        uint nextId = listElements[internalId].next;
+        
+        if (previousId != UINT_LARGEST) {
+            // There is a previous element, it is not the first element in this list
+            // Skip this element and connect the previous element to the next element
+            listElements[previousId].next = nextId;
+        } else first = listElements[internalId].next;   // It is the first element, give the 'first' to next one
+        
+        if (nextId != UINT_LARGEST) {
+            // There is a next element, it is not the last element in this list
+            // Skip this element and connet the next element to the previous element
+            listElements[nextId].previous = previousId;
+        } else last = listElements[internalId].previous;// Same as changing first, give the 'last' to next one
+        
+        size--;    // Size is decreased by 1
+        
+        // TODO should delete actual content
+    }
+    
+    function lock() public ownerOnly {
+        boardLock = true;
+    }
+    
+    function unlock() public ownerOnly {
+        boardLock = false;
+    }
+
+    function destructBoard() public ownerOnly {
+        selfdestruct(owner);
     }
 }
