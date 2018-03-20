@@ -1,13 +1,32 @@
 pragma solidity ^0.4.19;
 
 import "./Board.sol";
-import "./Owned.sol";
 
 
-contract OwnedBoard is Board, Owned {
+contract ManageableBoard is Board {
+    modifier ownerOnly {
+        require(msg.sender == owner);
+        _;
+    }
+    
+    // Making this internal visivility and create getter.
+    // somehow from outside of this contract, executing getter is more cheaper. It's quite strange.
+    address internal owner;
+    
+    function ManageableBoard(address _owner) public {
+        owner = _owner;
+    }
+    
     event ThreadDetached();
     
     event ThreadBumped();
+    
+    /**
+     * Get the owner address of this board
+     */
+    function getOwner() public view returns (address _owner) {
+        return owner;
+    }
     
     /**
      * Get internalId of the thread provided.
@@ -34,7 +53,7 @@ contract OwnedBoard is Board, Owned {
      *       If you want to delete thread itself from the state, you need to call
      *       OwnedThread.destructThread().
      * 
-     * Only owner can execute this function.
+     * Only owner should be able to execute this function.
      */
     function detachThread(uint index) public;
     
@@ -46,7 +65,7 @@ contract OwnedBoard is Board, Owned {
      * So you don't have to call lock() beforehand.
      * You can get internalId of specific thread by calling getInternalIdOfThread(Thread).
      * 
-     * Only owner can execute this function.
+     * Only owner should be able to execute this function.
      */
     function detachThreadByInternalId(uint internalId) public;
     
@@ -59,14 +78,14 @@ contract OwnedBoard is Board, Owned {
      * lock your board. User might waste gas for nothing when it is entering locked state.
      * To unlock, call unlock().
      * 
-     * Only owner can execute this function.
+     * Only owner should be able to execute this function.
      */
     function lock() public;
     
     /**
      * Unlock this board from locked state. About lock feature, See lock().
      * 
-     * Only owner can execute this function.
+     * Only owner should be able to execute this function.
      */
     function unlock() public;
     
@@ -75,7 +94,7 @@ contract OwnedBoard is Board, Owned {
      * Delete all data this board had from the current blockchain state.
      * Refund is going to be payed to the owner.
      * 
-     * Only owner can execute this function.
+     * Only owner should be able to execute this function.
      */
     function destructBoard() public;
 }

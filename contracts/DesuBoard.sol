@@ -1,10 +1,10 @@
 pragma solidity ^0.4.19;
 
-import "./interfaces/OwnedBoard.sol";
+import "./interfaces/ManageableBoard.sol";
 import "./DesuThread.sol";
 
 
-contract DesuBoard is OwnedBoard {
+contract DesuBoard is ManageableBoard {
     struct ListElement {
         uint previous;
         uint next;
@@ -23,7 +23,7 @@ contract DesuBoard is OwnedBoard {
     uint private last = 0;
     uint private size = 0;
 
-    function DesuBoard() public Owned(msg.sender) { }
+    function DesuBoard() public ManageableBoard(msg.sender) { }
     
     function makeNewThread(string title, string text) public {
         // Create new thread contract

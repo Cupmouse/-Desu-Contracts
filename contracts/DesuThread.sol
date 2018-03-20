@@ -1,9 +1,10 @@
 pragma solidity ^0.4.19;
 
-import "./interfaces/OwnedThread.sol";
+import "./interfaces/ManageableThread.sol";
+import "./DesuBoard.sol";
 
 
-contract DesuThread is OwnedThread {
+contract DesuThread is ManageableThread {
     struct Post {
         address poster;
         uint timestamp;
@@ -15,7 +16,7 @@ contract DesuThread is OwnedThread {
     string private title;
     Post[] private posts;
     
-    function DesuThread(DesuBoard board, string _title, string text) public Owned() {
+    function DesuThread(DesuBoard parentBoard, string _title, string text) public ManageableThread(parentBoard) {
         require(bytes(text).length != 0);  // No content not allowed
         
         title = _title;
@@ -48,7 +49,7 @@ contract DesuThread is OwnedThread {
         return posts[postNumber].text;
     }
     
-    function removePost(uint postNumber) public ownerOnly {
+    function removePost(uint postNumber) public boardOwnerOnly {
         require(postNumber < posts.length);
         require(postNumber != 0);    // The first post can not be removed, if you want to, use destructThread
         
@@ -57,11 +58,7 @@ contract DesuThread is OwnedThread {
         PostRemoved(postNumber);    // Call the event
     }
     
-    /**
-     * Self destruct this thread
-     * Remaining nukos are sent to the owner
-     */
-    function destructThread() public ownerOnly {
-        selfdestruct(owner);
+    function destructThread() public boardOwnerOnly {
+        selfdestruct(parentBoard.getOwner());
     }
 }

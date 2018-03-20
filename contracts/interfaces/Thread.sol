@@ -1,6 +1,7 @@
 pragma solidity ^0.4.19;
 pragma experimental ABIEncoderV2;   // Need this for string[] return
 
+
 /**
  * An interface for a basic thread
  */
