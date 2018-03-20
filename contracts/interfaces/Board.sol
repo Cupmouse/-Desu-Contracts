@@ -4,6 +4,8 @@ import "./Thread.sol";
 
 
 contract Board {
+    event ThreadBumped();
+    
     /**
      * Event called when new thread is made
      */

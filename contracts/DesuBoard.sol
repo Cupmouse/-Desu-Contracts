@@ -27,6 +27,8 @@ contract DesuBoard is ManageableBoard {
     
     function makeNewThread(string title, string text) public {
         // Create new thread contract
+        // Most explorer is not supporting tracking of this newly created contract
+        // It creates ACTUAL contract on the blockchain that have an address
         Thread newThread = new DesuThread(this, title, text);
         
         // Add thread at the top of the list

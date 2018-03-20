@@ -4,6 +4,8 @@ import "./Board.sol";
 
 
 contract ManageableBoard is Board {
+    event ThreadDetached();
+    
     modifier ownerOnly {
         require(msg.sender == owner);
         _;
@@ -16,10 +18,6 @@ contract ManageableBoard is Board {
     function ManageableBoard(address _owner) public {
         owner = _owner;
     }
-    
-    event ThreadDetached();
-    
-    event ThreadBumped();
     
     /**
      * Get the owner address of this board
@@ -92,7 +90,7 @@ contract ManageableBoard is Board {
     /**
      * Destruct this board. This board contract will never come back to life.
      * Delete all data this board had from the current blockchain state.
-     * Refund is going to be payed to the owner.
+     * Fund is going to be payed to the owner.
      * 
      * Only owner should be able to execute this function.
      */
