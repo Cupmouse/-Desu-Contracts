@@ -41,8 +41,8 @@ contract DesuBoard is ManageableBoard {
     
     // List
     ListElement[] private listElements;
-    uint private first = 0;
-    uint private last = 0;
+    uint private first = UINT_LARGEST;
+    uint private last = UINT_LARGEST;
     uint private size = 0;
     
     // Properties of board
