@@ -4,12 +4,23 @@ import "./Thread.sol";
 
 
 contract Board {
+    /**
+     * Event called when a thread on this board was bumped
+     */
     event ThreadBumped();
     
     /**
      * Event called when new thread is made
      */
     event NewThread(address poster, Thread thread);
+    
+    /**
+     * Bump a thread. Bumped thread will be top thread on this board.
+     * No one other than thread contract, which has been attached to this
+     * board, can call this function. It will simply be reverted.
+     * That means msg.sender has to be thread.
+     */
+    function bumpThread() public;
     
     /**
      * Make new thread in this board

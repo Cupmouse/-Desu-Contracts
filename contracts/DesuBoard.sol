@@ -16,9 +16,19 @@ contract DesuBoard is ManageableBoard {
         Thread thread;
     }
     
+    struct MapEntry {
+        bool exist; // Used to check if a entry actually exist
+        uint internalId;
+    }
+    
     modifier ownerOnlyOnLocked {
         require(msg.sender == owner);
         require(boardLock);
+        _;
+    }
+    
+    modifier requireNotLocked {
+        require(!boardLock);
         _;
     }
     
@@ -45,10 +55,50 @@ contract DesuBoard is ManageableBoard {
     uint private last = UINT_LARGEST;
     uint private size = 0;
     
+    /**
+     * Mapping address of registered threads to it's internal id
+     */
+    // if you use internalId as value, you can not tell if entry exists or not when internalId is 0
+    mapping(address => MapEntry) private attachedThreads;
+    
     // Properties of board
     bool private boardLock = false;
 
     function DesuBoard() public ManageableBoard(msg.sender) { }
+    
+    function bumpThread() public requireNotLocked {
+        MapEntry memory entry = attachedThreads[msg.sender];
+        require(entry.exist); // Should be attached to this board
+        
+        if (size == 1) {
+            // Bump? ok done
+            return;
+        }
+        
+        uint bumpedId = entry.internalId;
+        
+        // Previous neighbors say sayonara to this thread
+        uint prevId = listElements[bumpedId].previous;
+        uint nextId = listElements[bumpedId].next;
+        
+        if (prevId != UINT_LARGEST) // If previous neighbor exist
+            listElements[prevId].next = listElements[bumpedId].next;
+        
+        if (nextId != UINT_LARGEST) // If next neigher exist
+            listElements[nextId].previous = listElements[bumpedId].previous;
+        
+        // Move element of bumped thread to the top
+        listElements[bumpedId].previous = UINT_LARGEST;
+        listElements[bumpedId].next = first;
+        
+        // Previous first element now have previous element
+        listElements[first].previous = bumpedId;
+        
+        // First thread changed
+        first = bumpedId;
+        
+        // Size won't change
+    }
     
     function makeNewThread(string title, string text) public lockAffectable {
         // Create new thread contract
@@ -57,30 +107,33 @@ contract DesuBoard is ManageableBoard {
         Thread newThread = new DesuThread(this, title, text);
         
         // Add thread at the top of the list
-        uint added_iindex = listElements.length++;  // Get index number and widen array by one
-        require(added_iindex < UINT_LARGEST);  // Check if it reached the uint maximum, if do throw (probably never happens)
+        uint addedId = listElements.length++;  // Get index number and widen array by one
+        require(addedId < UINT_LARGEST);  // Check if it reached the uint maximum, if do throw (probably never happens)
         
         if (first == UINT_LARGEST) {
             // It's the very first element
             // Add the very first element to list
-            listElements[added_iindex] = ListElement(UINT_LARGEST, UINT_LARGEST, newThread);
+            listElements[addedId] = ListElement(UINT_LARGEST, UINT_LARGEST, newThread);
             
             // First element to be added to the list, last element is also this one
-            last = added_iindex;
+            last = addedId;
         } else {
             // Add new element to this list as first
-            listElements[added_iindex] = ListElement(UINT_LARGEST, first, newThread);
+            listElements[addedId] = ListElement(UINT_LARGEST, first, newThread);
             
             // Connect added element to previous the first element
             ListElement memory nextElement = listElements[first];
             // Update next element's reference to neighbor
-            listElements[first] = ListElement(added_iindex, nextElement.next, nextElement.thread);
+            listElements[first] = ListElement(addedId, nextElement.next, nextElement.thread);
         }
         
         // Added element is the first element of this list
-        first = added_iindex;
+        first = addedId;
         
         size++;
+        
+        // Put it to reversal mapping (thread => internalId)
+        attachedThreads[newThread] = MapEntry(true, addedId);
         
         NewThread(msg.sender, newThread);
     }
@@ -200,7 +253,10 @@ contract DesuBoard is ManageableBoard {
         
         size--;    // Size is decreased by 1
         
-        // TODO should delete actual content
+        delete attachedThreads[listElements[internalId].thread];   // Delete this first
+        delete listElements[internalId];    // Delete this after
+        
+        // TODO maybe reduce array size??? (internalId will NOT be consistent)
     }
     
     function lock() public ownerOnly {

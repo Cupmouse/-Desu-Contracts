@@ -46,6 +46,8 @@ contract DesuThread is ManageableThread {
         uint postNumber = posts.length++;  // Increase array size by 1
         posts[postNumber] = Post(msg.sender, now, text);    // now means block.timestamp
         
+        parentBoard.bumpThread();
+        
         NewPost(msg.sender, postNumber);   // Call event NewPost
     }
     
