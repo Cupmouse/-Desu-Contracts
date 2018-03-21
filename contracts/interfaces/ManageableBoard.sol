@@ -33,6 +33,19 @@ contract ManageableBoard is Board {
     function getInternalIdOfIndex(uint index) public view returns (uint internalId);
     
     /**
+     * Get bool value whether a board is locked or not
+     */
+    function isLocked() public view returns (bool _lock);
+    
+    /**
+     * Get a bool value whether a board has been destructed or not
+     * Return true if a board has NOT been destructed, false if destructed
+     */
+    function isAlive() public pure returns (bool _alive) {
+        return true;    // Seems like constant? selfdestruct will erase this too!
+    }
+    
+    /**
      * Remove address of thread whose index is provided from this board
      * After calling this function, you are no longer able to see the thread
      * sitting on this board's thread list

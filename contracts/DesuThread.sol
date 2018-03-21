@@ -12,6 +12,21 @@ contract DesuThread is ManageableThread {
         string text;
     }
     
+    modifier boardAlive {
+        require(parentBoard.isAlive());   // Board must not have been destructed
+        _;
+    }
+    
+    /**
+     * This modifier only accepts if msg.sender is the owner of parent board of this thread
+     * If parent board does not exist, anyone can pass this modifier
+     */
+    modifier boardOwnerOnlyOnAlive {
+        if (parentBoard.isAlive())
+            require(msg.sender == parentBoard.getOwner());
+        _;
+    }
+    
     address constant private NYAN_ADDRESS = 0x2222222222222222222222222222222222222222;
     
     string private title;
@@ -25,7 +40,7 @@ contract DesuThread is ManageableThread {
         posts[0] = Post(msg.sender, now, text);
     }
     
-    function post(string text) public {
+    function post(string text) public boardAlive {
         require(bytes(text).length != 0);  // Reject if there is no content
         
         uint postNumber = posts.length++;  // Increase array size by 1
@@ -101,7 +116,7 @@ contract DesuThread is ManageableThread {
         return posts.length;
     }
     
-    function removePost(uint postNumber) public boardOwnerOnly {
+    function removePost(uint postNumber) public boardOwnerOnlyOnAlive {
         require(postNumber < posts.length);
         require(postNumber != 0);    // The first post can not be removed, if you want to, use destructThread
         
@@ -110,7 +125,7 @@ contract DesuThread is ManageableThread {
         PostRemoved(postNumber);    // Call the event
     }
     
-    function destructThread() public boardOwnerOnly {
+    function destructThread() public boardOwnerOnlyOnAlive {
         selfdestruct(parentBoard.getOwner());
     }
     

@@ -172,6 +172,10 @@ contract DesuBoard is ManageableBoard {
         }
     }
     
+    function isLocked() public view returns (bool _lock) {
+        return boardLock;
+    }
+    
     function detachThreadByIndex(uint index) public ownerOnlyOnLocked {
         detachThreadByInternalId(getInternalIdOfIndex(index));
     }

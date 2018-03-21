@@ -5,15 +5,7 @@ import "./ManageableBoard.sol";
 
 
 contract ManageableThread is Thread {
-    /**
-     * This modifier only accepts if msg.sender is the owner of parent board of this thread
-     */
-    modifier boardOwnerOnly {
-        require(msg.sender == parentBoard.getOwner());
-        _;
-    }
-    
-    ManageableBoard public parentBoard;
+    ManageableBoard internal parentBoard;
     
     function ManageableThread(ManageableBoard _parentBoard) public {
         parentBoard = _parentBoard;
@@ -23,6 +15,13 @@ contract ManageableThread is Thread {
      * Event called when a post is removed by the owner
      */
     event PostRemoved(uint postNumber);
+    
+    /**
+     * Get an address of parent board of this thread
+     */
+    function getParentBoard() public view returns (address _parentBoard) {
+        return parentBoard;
+    }
     
     /**
      * Remove the post located at index provided
