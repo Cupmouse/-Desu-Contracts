@@ -1,5 +1,4 @@
 import assertRevert from 'zeppelin-solidity/test/helpers/assertRevert';
-import expectThrow from 'zeppelin-solidity/test/helpers/expectThrow';
 
 const DesuBoard = artifacts.require('DesuBoard');
 const DesuThread = artifacts.require('DesuThread');

@@ -97,6 +97,13 @@ contract DesuBoard is ManageableBoard {
         // First thread changed
         first = bumpedId;
         
+        if (last == bumpedId) {
+            // It is no longer the last one
+            // If bumped one is the last element, and list size > 1, it must have
+            // previous element
+            last = prevId;
+        }
+        
         // Size won't change
     }
     
