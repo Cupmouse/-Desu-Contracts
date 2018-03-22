@@ -113,6 +113,20 @@ contract('DesuBoard permission tests', async (accounts) => {
     });
   });
 
+  describe('Functions should not be called from non attached threads', async () => {
+    // Preparing for calling post
+    let thread;
+
+    it('deploy new thread', async () => {
+      thread = await DesuThread.new(desuBoard.address, 'test', 'test',{from: accounts[6]});
+    });
+
+    // On Board.sol
+    it('call post(string) which call bumpThread() inside', async () => {
+      await assertRevert(thread.post('bump?', {from: accounts[5]}));
+    });
+  });
+
   describe('lock() actually locks function should not be executed from non owner', async () => {
     it('lock board as owner', async () => {
       await desuBoard.lock({from: accounts[0]});  // Lock as owner, previously tested, not a target to test

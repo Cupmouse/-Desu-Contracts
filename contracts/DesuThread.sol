@@ -100,7 +100,7 @@ contract DesuThread is ManageableThread {
         return (rtn, limitCount);
     }
     
-    function getPostTexts(uint fromPostNumber, uint maxCount) public view returns (string[] texts, uint foundCount) {
+    function getPostTextArray(uint fromPostNumber, uint maxCount) public view returns (string[] texts, uint foundCount) {
         require(fromPostNumber < posts.length);
         
         string[] memory rtn = new string[](maxCount);

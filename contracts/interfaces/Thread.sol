@@ -69,7 +69,7 @@ contract Thread {
      * contains actual results.
      * Revert if fromPostNumber is out of bounds (fromPostNumber < numberOfPosts)
      */
-    function getPostTexts(uint fromPostNumber, uint maxCount) public view returns (string[] texts, uint foundCount);
+    function getPostTextArray(uint fromPostNumber, uint maxCount) public view returns (string[] texts, uint foundCount);
     
     /**
      * Return an number of posts this thread have
