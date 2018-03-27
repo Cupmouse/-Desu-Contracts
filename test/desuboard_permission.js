@@ -118,7 +118,7 @@ contract('DesuBoard permission tests', async (accounts) => {
     let thread;
 
     it('deploy new thread', async () => {
-      thread = await DesuThread.new(desuBoard.address, 'test', 'test',{from: accounts[6]});
+      thread = await DesuThread.new(desuBoard.address, accounts[6], 'test', 'test',{from: accounts[6]});
     });
 
     // On Board.sol

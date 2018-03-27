@@ -123,7 +123,7 @@ contract('DesuBoard list', async (accounts) => {
     // await desuBoard.registerThread(newThread.address, {from: accounts[0]}); here for checking checking method lol
   });
 
-  describe('bump #2', async () => {
+  describe('bump #1', async () => {
     it('bump', async () => {
       await bumpThreadIndexAt(2);
     });
@@ -158,8 +158,14 @@ contract('DesuBoard list', async (accounts) => {
     })
   });
 
-  describe('bump #1', async () => {
+  describe('bump #2', async () => {
     it('bump', async () => {
+      await bumpThreadIndexAt(1);
+    });
+    it('bump the same thread again', async () => {
+      await bumpThreadIndexAt(0);
+    });
+    it('bump another one', async () => {
       await bumpThreadIndexAt(1);
     });
     it('assert', async () => {

@@ -12,148 +12,157 @@ contract DesuBoard is ManageableBoard {
     struct ListElement {
         uint previous;
         uint next;
-        
+
         Thread thread;
     }
-    
+
     struct MapEntry {
         bool exist; // Used to check if a entry actually exist
         uint internalId;
     }
-    
+
     modifier ownerOnlyOnLocked {
         require(msg.sender == owner);
         require(boardLock);
         _;
     }
-    
+
     modifier requireNotLocked {
         require(!boardLock);
         _;
     }
-    
+
     // Avoiding similar name to onlyOwnerOnLocked
     modifier lockAffectable {
         if (msg.sender != owner)
             require(!boardLock);    // Non owner can only get permission when a board is not locked
         _;
     }
-    
+
     modifier ownerOnlyLockAffectable {
         require(msg.sender == owner);
         _;
     }
-    
+
     /**
      * uint maximum value, used for marking terminals of list
      */
     uint constant private UINT_LARGEST = 2**255 - 1;
-    
+
     // List
     ListElement[] private listElements;
     uint private first = UINT_LARGEST;
     uint private last = UINT_LARGEST;
     uint private size = 0;
-    
+
     /**
      * Mapping address of registered threads to it's internal id
      */
     // if you use internalId as value, you can not tell if entry exists or not when internalId is 0
     mapping(address => MapEntry) private attachedThreads;
-    
+
     // Properties of board
     bool private boardLock = false;
 
     function DesuBoard() public ManageableBoard(msg.sender) { }
-    
+
     function bumpThread() public requireNotLocked {
         MapEntry memory entry = attachedThreads[msg.sender];
         require(entry.exist); // Should be attached to this board
-        
+
         if (size == 1) {
             // Bump? ok done
             return;
         }
-        
+
         uint bumpedId = entry.internalId;
-        
+
+        if (bumpedId == first) {
+            // Excluding condition below if the bumped thread is the first element
+            return;
+        }
+        // It's new garanteed that this board has more than 2 threads and
+        // the bumped thread is not the first thread of it
+
         // Previous neighbors say sayonara to this thread
         uint prevId = listElements[bumpedId].previous;
         uint nextId = listElements[bumpedId].next;
-        
-        if (prevId != UINT_LARGEST) // If previous neighbor exist
-            listElements[prevId].next = listElements[bumpedId].next;
-        
-        if (nextId != UINT_LARGEST) // If next neigher exist
-            listElements[nextId].previous = listElements[bumpedId].previous;
-        
+
+        // Previous element always exists
+        // Connect prev element and next element, which can be not exist
+        listElements[prevId].next = nextId;
+
+        if (nextId != UINT_LARGEST) // If next element does exist, connect it to the new neighbor
+            listElements[nextId].previous = prevId;
+
+        // It's all about bumped thread itself from here below
         // Move element of bumped thread to the top
         listElements[bumpedId].previous = UINT_LARGEST;
         listElements[bumpedId].next = first;
-        
+
         // Previous first element now have previous element
         listElements[first].previous = bumpedId;
-        
+
         // First thread changed
         first = bumpedId;
-        
+
         if (last == bumpedId) {
             // It is no longer the last one
             // If bumped one is the last element, and list size > 1, it must have
             // previous element
             last = prevId;
         }
-        
+
         // Size won't change
     }
-    
+
     function makeNewThread(string title, string text) public lockAffectable {
         // Create new thread contract
         // Most explorer is not supporting tracking of this newly created contract
         // It creates ACTUAL contract on the blockchain that have an address
-        Thread newThread = new DesuThread(this, title, text);
-        
+        Thread newThread = new DesuThread(this, msg.sender, title, text);
+
         // Add thread at the top of the list
         uint addedId = listElements.length++;  // Get index number and widen array by one
         require(addedId < UINT_LARGEST);  // Check if it reached the uint maximum, if do throw (probably never happens)
-        
+
         if (first == UINT_LARGEST) {
             // It's the very first element
             // Add the very first element to list
             listElements[addedId] = ListElement(UINT_LARGEST, UINT_LARGEST, newThread);
-            
+
             // First element to be added to the list, last element is also this one
             last = addedId;
         } else {
             // Add new element to this list as first
             listElements[addedId] = ListElement(UINT_LARGEST, first, newThread);
-            
+
             // Connect added element to previous the first element
             ListElement memory nextElement = listElements[first];
             // Update next element's reference to neighbor
             listElements[first] = ListElement(addedId, nextElement.next, nextElement.thread);
         }
-        
+
         // Added element is the first element of this list
         first = addedId;
-        
+
         size++;
-        
+
         // Put it to reversal mapping (thread => internalId)
         attachedThreads[newThread] = MapEntry(true, addedId);
-        
+
         NewThread(msg.sender, newThread);
     }
-     
+
     function getThreadAt(uint index) public view returns (Thread thread) {
         return listElements[getInternalIdOfIndex(index)].thread;
     }
-    
+
     function getFirstThread() public view returns (Thread thread) {
         require(first != UINT_LARGEST);
         return listElements[first].thread;
     }
-    
+
     /**
      * Get the last thread of this board
      */
@@ -161,11 +170,11 @@ contract DesuBoard is ManageableBoard {
         require(last != UINT_LARGEST);
         return listElements[last].thread;
     }
-    
+
     function getNumberOfThreads() public view returns (uint numberOfThreads) {
         return size;
     }
-    
+
     function getThreadArray(uint startIndex, uint maxCount) public view returns (Thread[] threads, uint foundCount) {
         // require(startIndex + maxCount <= size); don't need this
 
@@ -175,101 +184,101 @@ contract DesuBoard is ManageableBoard {
         uint cur = getInternalIdOfIndex(startIndex);
         // Don't set initial value because cur might represents 'no more elements'
         ListElement memory curElem;
-        
+
         while (cur != UINT_LARGEST) {
             curElem = listElements[cur];
             // Set thread cursor on to an array
             threadSeq[count] = curElem.thread;
-            
+
             // Increment count and move to the next list element
             count++;
             cur = curElem.next;
-            
+
             if (count >= maxCount) {
                 // If we reached maxCount, get out of this loop!
                 break;
             }
         }
-        
+
         return (threadSeq, count);
     }
-    
+
     function getInternalIdOfIndex(uint index) public view returns (uint internalId) {
         require(index < size);  // Index out of size
-        
+
         if (size == 1)
             return first;  // List only have one element
-        
+
         // Declaring variable here because in solidity when variable is declared scope is in entire function
         uint cur;
         uint count = 0;
-        
+
         if (index > size / 2) {
             // Search from the last element
-            
+
             uint reversedIndex = (size - 1) - index;   // Reversed index
             cur = last;
-            
+
             while (cur != UINT_LARGEST) { // cur == UINT_LARGEST means reached the last element
                 if (count == reversedIndex)
                     return cur;    // Found the element looking for
-                
+
                 cur = listElements[cur].previous;   // Move cursor to previous internal element index
                 count++;
             }
         } else {
             // Search from the first element
-            
+
             cur = first;
-            
+
             while (cur != UINT_LARGEST) {
                 if (count == index)
                     return cur;
-                
+
                 cur = listElements[cur].next;   // Move cursor to next internal element index
                 count++;
             }
         }
     }
-    
+
     function isLocked() public view returns (bool _lock) {
         return boardLock;
     }
-    
+
     function detachThreadByIndex(uint index) public ownerOnlyOnLocked {
         detachThreadByInternalId(getInternalIdOfIndex(index));
     }
-    
+
     function detachThreadByInternalId(uint internalId) public ownerOnlyLockAffectable {
         require(internalId < listElements.length);  // Exceeding a bound
-        
+
         uint previousId = listElements[internalId].previous;
         uint nextId = listElements[internalId].next;
-        
+
         if (previousId != UINT_LARGEST) {
             // There is a previous element, it is not the first element in this list
             // Skip this element and connect the previous element to the next element
             listElements[previousId].next = nextId;
         } else first = listElements[internalId].next;   // It is the first element, give the 'first' to next one
-        
+
         if (nextId != UINT_LARGEST) {
             // There is a next element, it is not the last element in this list
             // Skip this element and connet the next element to the previous element
             listElements[nextId].previous = previousId;
         } else last = listElements[internalId].previous;// Same as changing first, give the 'last' to next one
-        
+
         size--;    // Size is decreased by 1
-        
+
         delete attachedThreads[listElements[internalId].thread];   // Delete this first
         delete listElements[internalId];    // Delete this after
-        
+
         // TODO maybe reduce array size??? (internalId will NOT be consistent)
     }
-    
+
     function lock() public ownerOnly {
         boardLock = true;
     }
-    
+
     function unlock() public ownerOnly {
         boardLock = false;
     }
