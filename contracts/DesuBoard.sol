@@ -114,6 +114,9 @@ contract DesuBoard is ManageableBoard {
         }
 
         // Size won't change
+
+        // Thread is bumped, fire a event
+        ThreadBumped();
     }
 
     function makeNewThread(string title, string text) public lockAffectable {
