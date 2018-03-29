@@ -21,9 +21,8 @@ contract DesuBoard is ManageableBoard {
         uint internalId;
     }
 
-    modifier ownerOnlyOnLocked {
+    modifier ownerOnly {
         require(msg.sender == owner);
-        require(boardLock);
         _;
     }
 
@@ -49,6 +48,10 @@ contract DesuBoard is ManageableBoard {
      */
     uint constant private UINT_LARGEST = 2**255 - 1;
 
+    // Making this internal visivility and create getter.
+    // somehow from outside of this contract, executing getter is more cheaper. It's quite strange.
+    address private owner;
+
     // List
     ListElement[] private listElements;
     uint private first = UINT_LARGEST;
@@ -64,9 +67,11 @@ contract DesuBoard is ManageableBoard {
     // Properties of board
     bool private boardLock = false;
 
-    function DesuBoard() public ManageableBoard(msg.sender) { }
+    function DesuBoard() public {
+        owner = msg.sender;
+    }
 
-    function bumpThread() public requireNotLocked {
+    function bumpThread() external requireNotLocked {
         MapEntry memory entry = attachedThreads[msg.sender];
         require(entry.exist); // Should be attached to this board
 
@@ -119,7 +124,7 @@ contract DesuBoard is ManageableBoard {
         ThreadBumped();
     }
 
-    function makeNewThread(string title, string text) public lockAffectable {
+    function makeNewThread(string title, string text) external lockAffectable {
         // Create new thread contract
         // Most explorer is not supporting tracking of this newly created contract
         // It creates ACTUAL contract on the blockchain that have an address
@@ -157,11 +162,11 @@ contract DesuBoard is ManageableBoard {
         NewThread(msg.sender, newThread);
     }
 
-    function getThreadAt(uint index) public view returns (Thread thread) {
+    function getThreadAt(uint index) external view returns (Thread thread) {
         return listElements[getInternalIdOfIndex(index)].thread;
     }
 
-    function getFirstThread() public view returns (Thread thread) {
+    function getFirstThread() external view returns (Thread thread) {
         require(first != UINT_LARGEST);
         return listElements[first].thread;
     }
@@ -169,16 +174,16 @@ contract DesuBoard is ManageableBoard {
     /**
      * Get the last thread of this board
      */
-    function getLastThread() public view returns (Thread thread) {
+    function getLastThread() external view returns (Thread thread) {
         require(last != UINT_LARGEST);
         return listElements[last].thread;
     }
 
-    function getNumberOfThreads() public view returns (uint numberOfThreads) {
+    function getNumberOfThreads() external view returns (uint numberOfThreads) {
         return size;
     }
 
-    function getThreadArray(uint startIndex, uint maxCount) public view returns (Thread[] threads, uint foundCount) {
+    function getThreadArray(uint startIndex, uint maxCount) external view returns (Thread[] threads, uint foundCount) {
         // require(startIndex + maxCount <= size); don't need this
 
         Thread[] memory threadSeq = new Thread[](maxCount);
@@ -244,15 +249,26 @@ contract DesuBoard is ManageableBoard {
         }
     }
 
-    function isLocked() public view returns (bool _lock) {
+    /**
+     * Get the owner address of this board
+     */
+    function getOwner() external view returns (address _owner) {
+        return owner;
+    }
+
+    function isLocked() external view returns (bool _lock) {
         return boardLock;
     }
 
-    function detachThreadByIndex(uint index) public ownerOnlyOnLocked {
-        detachThreadByInternalId(getInternalIdOfIndex(index));
+    /**
+     * Get a bool value whether a board has been destructed or not
+     * Return true if a board has NOT been destructed, false if destructed
+     */
+    function isAlive() external pure returns (bool _alive) {
+        return true;    // Seems like constant? selfdestruct will erase this too!
     }
 
-    function detachThreadByInternalId(uint internalId) public ownerOnlyLockAffectable {
+    function detachThreadByInternalId(uint internalId) external ownerOnlyLockAffectable {
         require(internalId < listElements.length);  // Exceeding a bound
 
         uint previousId = listElements[internalId].previous;
@@ -278,15 +294,11 @@ contract DesuBoard is ManageableBoard {
         // TODO maybe reduce array size??? (internalId will NOT be consistent)
     }
 
-    function lock() public ownerOnly {
-        boardLock = true;
+    function setLock(bool lockState) external ownerOnly {
+        boardLock = lockState;
     }
 
-    function unlock() public ownerOnly {
-        boardLock = false;
-    }
-
-    function destructBoard() public ownerOnly {
+    function destructBoard() external ownerOnly {
         selfdestruct(owner);
     }
 }

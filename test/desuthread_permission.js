@@ -30,8 +30,6 @@ contract('Permission test', async (accounts) => {
     it('getPostTimestampArray(uint, uint)', async () => await desuThread.getPostTimestampArray.call(0, 50, {from: accounts[2]}));
     it('getPostTextArray(uint, uint)', async () => await desuThread.getPostTextArray.call(0, 50, {from: accounts[2]}));
     it('getNumberOfPosts()', async () => await desuThread.getNumberOfPosts.call({from: accounts[2]}));
-
-    // On ManageableThread.sol
     it('getParentBoard()', async () => await desuThread.getParentBoard.call({from: accounts[2]}));
   });
 

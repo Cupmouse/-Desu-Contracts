@@ -27,10 +27,8 @@
     "url": "https://github.com/Cupmouse/Desu-Contracts/issues"
   },
   "homepage": "https://github.com/Cupmouse/Desu-Contracts#readme",
-  "dependencies": {
-    "zeppelin-solidity": "1.7.0"
-  },
   "devDependencies": {
+    "zeppelin-solidity": "1.7.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-es2015": "^6.24.1",

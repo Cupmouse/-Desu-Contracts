@@ -29,18 +29,22 @@ contract DesuThread is ManageableThread {
 
     address constant private NYAN_ADDRESS = 0x2222222222222222222222222222222222222222;
 
+    DesuBoard private parentBoard;
+
     string private title;
     Post[] private posts;
 
-    function DesuThread(DesuBoard parentBoard, address threadPoster, string _title, string text) public ManageableThread(parentBoard) {
+    function DesuThread(DesuBoard _parentBoard, address threadPoster, string _title, string text) public {
         require(bytes(text).length != 0);  // No content not allowed
+
+        parentBoard = _parentBoard;
 
         title = _title;
         posts.length++; // Allocate a new array element
         posts[0] = Post(threadPoster, now, text);
     }
 
-    function post(string text) public boardAlive {
+    function post(string text) external boardAlive {
         require(bytes(text).length != 0);  // Reject if there is no content
 
         uint postNumber = posts.length++;  // Increase array size by 1
@@ -48,31 +52,31 @@ contract DesuThread is ManageableThread {
 
         parentBoard.bumpThread();
 
-        NewPost(msg.sender, postNumber);   // Call event NewPost
+        NewPost(postNumber);   // Call event NewPost
     }
 
-    function getTitle() public view returns (string _title) {
+    function getTitle() external view returns (string _title) {
         return title;
     }
 
-    function getPoster(uint postNumber) public view returns (address poster) {
+    function getPoster(uint postNumber) external view returns (address poster) {
         return posts[postNumber].poster;
     }
 
-    function getPostTimestamp(uint postNumber) public view returns (uint timestamp) {
+    function getPostTimestamp(uint postNumber) external view returns (uint timestamp) {
         return posts[postNumber].timestamp;
     }
 
-    function getPostText(uint postNumber) public view returns (string text) {
+    function getPostText(uint postNumber) external view returns (string text) {
         return posts[postNumber].text;
     }
 
-    function getPostAt(uint postNumber) public view returns (address _poster, uint timestamp, string text) {
+    function getPostAt(uint postNumber) external view returns (address _poster, uint timestamp, string text) {
         Post memory postAt = posts[postNumber];
         return (postAt.poster, postAt.timestamp, postAt.text);
     }
 
-    function getPosterArray(uint fromPostNumber, uint maxCount) public view returns (address[] posters, uint foundCount) {
+    function getPosterArray(uint fromPostNumber, uint maxCount) external view returns (address[] posters, uint foundCount) {
         require(fromPostNumber < posts.length);
 
         address[] memory rtn = new address[](maxCount);
@@ -86,7 +90,7 @@ contract DesuThread is ManageableThread {
         return (rtn, limitCount);
     }
 
-    function getPostTimestampArray(uint fromPostNumber, uint maxCount) public view returns (uint[] timestamps, uint foundCount) {
+    function getPostTimestampArray(uint fromPostNumber, uint maxCount) external view returns (uint[] timestamps, uint foundCount) {
         require(fromPostNumber < posts.length);
 
         uint[] memory rtn = new uint[](maxCount);
@@ -100,7 +104,7 @@ contract DesuThread is ManageableThread {
         return (rtn, limitCount);
     }
 
-    function getPostTextArray(uint fromPostNumber, uint maxCount) public view returns (string[] texts, uint foundCount) {
+    function getPostTextArray(uint fromPostNumber, uint maxCount) external view returns (string[] texts, uint foundCount) {
         require(fromPostNumber < posts.length);
 
         string[] memory rtn = new string[](maxCount);
@@ -114,11 +118,26 @@ contract DesuThread is ManageableThread {
         return (rtn, limitCount);
     }
 
-    function getNumberOfPosts() public view returns (uint numberOfPosts) {
+    function getNumberOfPosts() external view returns (uint numberOfPosts) {
         return posts.length;
     }
 
-    function removePost(uint postNumber) public boardOwnerOnlyOnAlive {
+    /**
+     * Get an address of parent board of this thread
+     */
+    function getParentBoard() external view returns (address _parentBoard) {
+        return parentBoard;
+    }
+
+    /**
+     * Get a bool value whether a thread has been destructed or not
+     * Return true if a thread has NOT been destructed, false if destructed
+     */
+    function isAlive() external pure returns (bool _alive) {
+        return true;
+    }
+
+    function removePost(uint postNumber) external boardOwnerOnlyOnAlive {
         require(postNumber < posts.length);
         require(postNumber != 0);    // The first post can not be removed, if you want to, use destructThread
 
@@ -127,7 +146,7 @@ contract DesuThread is ManageableThread {
         PostRemoved(postNumber);    // Call the event
     }
 
-    function destructThread() public boardOwnerOnlyOnAlive {
+    function destructThread() external boardOwnerOnlyOnAlive {
         selfdestruct(parentBoard.getOwner());
     }
 

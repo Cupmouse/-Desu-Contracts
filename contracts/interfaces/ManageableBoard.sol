@@ -3,29 +3,11 @@ pragma solidity ^0.4.19;
 import "./Board.sol";
 
 
+// Idk but interface cannot inherit another interface.
+// We have to specify all the interfaces when implement it
 contract ManageableBoard is Board {
     event ThreadDetached();
-    
-    modifier ownerOnly {
-        require(msg.sender == owner);
-        _;
-    }
-    
-    // Making this internal visivility and create getter.
-    // somehow from outside of this contract, executing getter is more cheaper. It's quite strange.
-    address internal owner;
-    
-    function ManageableBoard(address _owner) public {
-        owner = _owner;
-    }
-    
-    /**
-     * Get the owner address of this board
-     */
-    function getOwner() public view returns (address _owner) {
-        return owner;
-    }
-    
+
     /**
      * Get internalId of the thread's index provided.
      * WARNING: Gas cost might REALLY high!
@@ -35,40 +17,7 @@ contract ManageableBoard is Board {
     /**
      * Get bool value whether a board is locked or not
      */
-    function isLocked() public view returns (bool _lock);
-    
-    /**
-     * Get a bool value whether a board has been destructed or not
-     * Return true if a board has NOT been destructed, false if destructed
-     */
-    function isAlive() public pure returns (bool _alive) {
-        return true;    // Seems like constant? selfdestruct will erase this too!
-    }
-    
-    /**
-     * Remove address of thread whose index is provided from this board
-     * After calling this function, you are no longer able to see the thread
-     * sitting on this board's thread list
-     * WARNING: You *HAVE* to call lock() before calling this function.
-     *          Because of what index is, index of the thread you want to detach
-     *          might change during calling this thread; if another people made
-     *          new thread on this board almost simultaneously and he/she's transaction
-     *          was included before your 'detach thread' transaction,
-     *          new thread will be the top thread, making your target thread's index to be +1,
-     *          consequently detaching a non desired thread which was
-     *          coincidentally the previous index thread.
-     *          To prevent this, you *HAVE* to call lock() in advance.
-     *          lock() will set this board locked state so no one other than the owner
-     *          can not alter indexes of threads on your board. And then you perform
-     *          this function. See lock() for more about locking feature.
-     * NOTE: This will *NOT* erase thread itself from the current blockchain state.
-     *       If you want to delete thread itself from the state, you need to call
-     *       DesuThread.destructThread().
-     * 
-     * Only executable when the board is locked.
-     * Only owner should be able to execute this function.
-     */
-    function detachThreadByIndex(uint index) public;
+    function isLocked() external view returns (bool _lock);
     
     /**
      * Do the same thing as detachThreadByIndex(uint index), but you have to provide
@@ -84,27 +33,20 @@ contract ManageableBoard is Board {
      * Revert if internalId is out of bound
      * Only owner should be able to execute this function.
      */
-    function detachThreadByInternalId(uint internalId) public;
+    function detachThreadByInternalId(uint internalId) external;
     
     /**
-     * Lock this board. This board will be in locked state if you call this function.
+     * Lock or unlock this board. This board will be in locked state if you call this function with lockState true.
      * During locked state, account other than the owner can not call functions
      * that will write changes to this board.
      * Often used when calling detachThreadByIndex(uint index).
      * We highly reccomend to notify people using it in advance if you are going to
      * lock your board. User might waste gas for nothing when it is entering locked state.
-     * To unlock, call unlock().
+     * To unlock, call this function with lockState false.
      * 
      * Only owner should be able to execute this function.
      */
-    function lock() public;
-    
-    /**
-     * Unlock this board from locked state. About lock feature, See lock().
-     * 
-     * Only owner should be able to execute this function.
-     */
-    function unlock() public;
+    function setLock(bool lockState) external;
     
     /**
      * Destruct this board. This board contract will never come back to life.
@@ -113,5 +55,5 @@ contract ManageableBoard is Board {
      * 
      * Only owner should be able to execute this function.
      */
-    function destructBoard() public;
+    function destructBoard() external;
 }

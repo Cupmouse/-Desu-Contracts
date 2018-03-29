@@ -28,16 +28,16 @@ contract('DesuBoard permission tests', async (accounts) => {
     it('getNumberOfThreads()', async () => {
       await desuBoard.getNumberOfThreads.call({from: accounts[5]});
     });
-
-    // On ManageableBoard.sol
-    it('getInternalIdOfIndex(uint)', async () => {
-      await desuBoard.getInternalIdOfIndex.call(0, {from: accounts[5]});
-    });
     it('isLocked()', async () => {
       await desuBoard.isLocked.call({from: accounts[5]});
     });
     it('isAlive()', async () => {
       await desuBoard.isAlive.call({from: accounts[5]});
+    });
+
+    // On ManageableBoard.sol
+    it('getInternalIdOfIndex(uint)', async () => {
+      await desuBoard.getInternalIdOfIndex.call(0, {from: accounts[5]});
     });
 
     // On DesuBoard.sol
@@ -52,17 +52,11 @@ contract('DesuBoard permission tests', async (accounts) => {
       await assertRevert(desuBoard.bumpThread({from: accounts[6]}));
     });
     // On ManageableBoard.sol
-    it('detachThreadByIndex(uint)', async () => {
-      await assertRevert(desuBoard.detachThreadByIndex(0, {from: accounts[6]}));
-    });
     it('detachThreadByInternalId(uint)', async () => {
       await assertRevert(desuBoard.detachThreadByInternalId(0, {from: accounts[6]}));
     });
-    it('lock()', async () => {
-      await assertRevert(desuBoard.lock({from: accounts[6]}));
-    });
-    it('unlock()', async () => {
-      await assertRevert(desuBoard.unlock({from: accounts[6]}));
+    it('setLock(bool)', async () => {
+      await assertRevert(desuBoard.setLock(true, {from: accounts[6]}));
     });
     it('destructBoard()', async () => {
       await assertRevert(desuBoard.destructBoard({from: accounts[6]}));
@@ -80,14 +74,11 @@ contract('DesuBoard permission tests', async (accounts) => {
     it('making post #2', async () => {
       await desuBoard.makeNewThread('あいう', 'えおか', {from: accounts[7]}); // This is not the function we want to test
     });
-    it('lock()', async () => {
-      await desuBoard.lock({from: accounts[0]});  // We have to call this before detachThreadByIndex(uint)
+    it('setLock(true)', async () => {
+      await desuBoard.setLock(true, {from: accounts[0]});  // We have to call this before detachThreadByIndex(uint)
     });
-    it('detachThreadByIndex(uint)', async () => {
-      await desuBoard.detachThreadByIndex(0, {from: accounts[0]});
-    });
-    it('unlock()', async () => {
-      await desuBoard.unlock({from: accounts[0]});
+    it('setLock(false)', async () => {
+      await desuBoard.setLock(false, {from: accounts[0]});
     });
     // await desuBoard.destructBoard({from: accounts[0]});  Don't call this yet
   });
@@ -127,9 +118,9 @@ contract('DesuBoard permission tests', async (accounts) => {
     });
   });
 
-  describe('lock() actually locks function should not be executed from non owner', async () => {
+  describe('setLock(true) actually locks function should not be executed from non owner', async () => {
     it('lock board as owner', async () => {
-      await desuBoard.lock({from: accounts[0]});  // Lock as owner, previously tested, not a target to test
+      await desuBoard.setLock(true, {from: accounts[0]});  // Lock as owner, previously tested, not a target to test
     });
     // On Board.sol
     it('makeNewThread(string,string)', async () => {
@@ -154,9 +145,6 @@ contract('DesuBoard permission tests', async (accounts) => {
   describe('Functions have lockAffectable can be called from owner even if it is locked', async () => {
     it('makeNewThread(string,string)', async () => {
       await desuBoard.makeNewThread('Great power comes with', 'great responsibility', {from: accounts[0]});
-    });
-    it('detatchThreadByIndex(uint)', async () => {
-      await desuBoard.detachThreadByIndex(0, {from: accounts[0]});  // Detach thread just created
     });
     it('detatchThreadByInternalId(uint)', async () => {
       await desuBoard.detachThreadByInternalId(0, {from: accounts[0]}); // Detach thread 0, there is no thread after this

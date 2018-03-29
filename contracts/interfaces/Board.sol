@@ -3,7 +3,7 @@ pragma solidity ^0.4.19;
 import "./Thread.sol";
 
 
-contract Board {
+interface Board {
     /**
      * Event called when a thread on this board was bumped
      */
@@ -20,23 +20,23 @@ contract Board {
      * board, can call this function. It will simply be reverted.
      * That means msg.sender has to be thread.
      */
-    function bumpThread() public;
+    function bumpThread() external;
     
     /**
      * Make new thread in this board
      * Newly created thread will be placed at the top in board (index = 0)
      */
-    function makeNewThread(string title, string text) public;
+    function makeNewThread(string title, string text) external;
     
     /**
      * Get a thread at index provided
      */
-    function getThreadAt(uint index) public view returns (Thread thread);
+    function getThreadAt(uint index) external view returns (Thread thread);
     
     /**
      * Get the first thread
      */
-    function getFirstThread() public view returns (Thread firstThread);
+    function getFirstThread() external view returns (Thread firstThread);
     
     /**
      * Get a thread array ascending ordered by added time, with maximum size of maxCount
@@ -46,10 +46,10 @@ contract Board {
      * return imcomplete array
      * Revert if fromIndex >= numberOfThreads
      */
-    function getThreadArray(uint fromIndex, uint maxCount) public view returns (Thread[] threads, uint foundCount);
+    function getThreadArray(uint fromIndex, uint maxCount) external view returns (Thread[] threads, uint foundCount);
     
     /**
      * Get the number of threads this board have
      */
-    function getNumberOfThreads() public view returns (uint numberOfThreads);
+    function getNumberOfThreads() external view returns (uint numberOfThreads);
 }

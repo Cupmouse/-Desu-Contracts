@@ -5,31 +5,10 @@ import "./ManageableBoard.sol";
 
 
 contract ManageableThread is Thread {
-    ManageableBoard internal parentBoard;
-
-    function ManageableThread(ManageableBoard _parentBoard) public {
-        parentBoard = _parentBoard;
-    }
-
     /**
      * Event called when a post is removed by the owner
      */
     event PostRemoved(uint postNumber);
-
-    /**
-     * Get an address of parent board of this thread
-     */
-    function getParentBoard() public view returns (address _parentBoard) {
-        return parentBoard;
-    }
-
-    /**
-     * Get a bool value whether a thread has been destructed or not
-     * Return true if a thread has NOT been destructed, false if destructed
-     */
-    function isAlive() public pure returns (bool _alive) {
-        return true;
-    }
 
     /**
      * Remove the post located at index provided
@@ -38,12 +17,12 @@ contract ManageableThread is Thread {
      * Please note destructThread() will delete all of posts on the thread from current state.
      * Only board owner should be able to call
      */
-    function removePost(uint index) public;
+    function removePost(uint index) external;
 
     /**
      * Self destruct this thread
      * Remaining nukos are sent to the owner
      * Only board owner should be able to call
      */
-    function destructThread() public;
+    function destructThread() external;
 }
