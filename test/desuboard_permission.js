@@ -31,9 +31,6 @@ contract('DesuBoard permission tests', async (accounts) => {
     it('isLocked()', async () => {
       await desuBoard.isLocked.call({from: accounts[5]});
     });
-    it('isAlive()', async () => {
-      await desuBoard.isAlive.call({from: accounts[5]});
-    });
 
     // On ManageableBoard.sol
     it('getInternalIdOfIndex(uint)', async () => {

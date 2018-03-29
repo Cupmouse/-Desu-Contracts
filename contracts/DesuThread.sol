@@ -12,18 +12,14 @@ contract DesuThread is ManageableThread {
         string text;
     }
 
-    modifier boardAlive {
-        require(parentBoard.isAlive());   // Board must not have been destructed
-        _;
-    }
-
     /**
      * This modifier only accepts if msg.sender is the owner of parent board of this thread
      * If parent board does not exist, anyone can pass this modifier
      */
-    modifier boardOwnerOnlyOnAlive {
-        if (parentBoard.isAlive())
-            require(msg.sender == parentBoard.getOwner());
+    modifier boardOwnerOnly {
+        address boardOwner = parentBoard.getOwner();
+        // If board owner is 0x00... assume there is no owner and let through
+        require(boardOwner != address(0) && msg.sender == boardOwner);
         _;
     }
 
@@ -44,12 +40,13 @@ contract DesuThread is ManageableThread {
         posts[0] = Post(threadPoster, now, text);
     }
 
-    function post(string text) external boardAlive {
+    function post(string text) external {
         require(bytes(text).length != 0);  // Reject if there is no content
 
         uint postNumber = posts.length++;  // Increase array size by 1
         posts[postNumber] = Post(msg.sender, now, text);    // now means block.timestamp
 
+        // This should revert if parent board has been destructed
         parentBoard.bumpThread();
 
         NewPost(postNumber);   // Call event NewPost
@@ -129,15 +126,7 @@ contract DesuThread is ManageableThread {
         return parentBoard;
     }
 
-    /**
-     * Get a bool value whether a thread has been destructed or not
-     * Return true if a thread has NOT been destructed, false if destructed
-     */
-    function isAlive() external pure returns (bool _alive) {
-        return true;
-    }
-
-    function removePost(uint postNumber) external boardOwnerOnlyOnAlive {
+    function removePost(uint postNumber) external boardOwnerOnly {
         require(postNumber < posts.length);
         require(postNumber != 0);    // The first post can not be removed, if you want to, use destructThread
 
@@ -146,7 +135,7 @@ contract DesuThread is ManageableThread {
         PostRemoved(postNumber);    // Call the event
     }
 
-    function destructThread() external boardOwnerOnlyOnAlive {
+    function destructThread() external boardOwnerOnly {
         selfdestruct(parentBoard.getOwner());
     }
 

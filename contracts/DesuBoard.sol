@@ -260,14 +260,6 @@ contract DesuBoard is ManageableBoard {
         return boardLock;
     }
 
-    /**
-     * Get a bool value whether a board has been destructed or not
-     * Return true if a board has NOT been destructed, false if destructed
-     */
-    function isAlive() external pure returns (bool _alive) {
-        return true;    // Seems like constant? selfdestruct will erase this too!
-    }
-
     function detachThreadByInternalId(uint internalId) external ownerOnlyLockAffectable {
         require(internalId < listElements.length);  // Exceeding a bound
 
