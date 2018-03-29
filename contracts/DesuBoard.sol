@@ -46,7 +46,7 @@ contract DesuBoard is ManageableBoard {
     /**
      * uint maximum value, used for marking terminals of list
      */
-    uint constant private UINT_LARGEST = 2**255 - 1;
+    uint constant private UINT_LARGEST = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 
     // Making this internal visivility and create getter.
     // somehow from outside of this contract, executing getter is more cheaper. It's quite strange.
