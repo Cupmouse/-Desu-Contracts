@@ -19,9 +19,6 @@ contract('DesuBoard permission tests', async (accounts) => {
     it('getThreadAt(uint)', async () => {
       await desuBoard.getThreadAt.call(0, {from: accounts[5]});
     });
-    it('getFirstThread()', async () => {
-      await desuBoard.getFirstThread.call({from: accounts[5]});
-    });
     it('getThreadArray(uint,uint)', async () => {
       await desuBoard.getThreadArray.call(0, 1, {from: accounts[5]});
     });
@@ -35,11 +32,6 @@ contract('DesuBoard permission tests', async (accounts) => {
     // On ManageableBoard.sol
     it('getInternalIdOfIndex(uint)', async () => {
       await desuBoard.getInternalIdOfIndex.call(0, {from: accounts[5]});
-    });
-
-    // On DesuBoard.sol
-    it('getLastThread(uint)', async () => {
-      await desuBoard.getLastThread.call({from: accounts[5]})
     });
   });
 

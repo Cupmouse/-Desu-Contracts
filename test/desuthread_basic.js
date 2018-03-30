@@ -16,7 +16,7 @@ contract('DesuThread basic', async (accounts) => {
     });
     it('make new thread', async () => {
       await desuBoard.makeNewThread(title, text, {from: accounts[1]});
-      const threadAddress = await desuBoard.getFirstThread({from: accounts[5]});
+      const threadAddress = await desuBoard.getThreadAt(0, {from: accounts[5]});
       desuThread = DesuThread.at(threadAddress);
 
       const storedTitle = await desuThread.getTitle.call({from: accounts[6]});

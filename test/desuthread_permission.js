@@ -3,7 +3,7 @@ import assertRevert from 'zeppelin-solidity/test/helpers/assertRevert';
 const DesuBoard = artifacts.require('DesuBoard');
 const DesuThread = artifacts.require('DesuThread');
 
-contract('Permission test', async (accounts) => {
+contract('DesuThread permission test', async (accounts) => {
   let desuBoard;
   let desuThread;
 
@@ -13,7 +13,7 @@ contract('Permission test', async (accounts) => {
     });
     it('make new thread', async () => {
       await desuBoard.makeNewThread('t', 't', {from: accounts[1]});
-      const threadAddress = await desuBoard.getFirstThread.call({from: accounts[1]});
+      const threadAddress = await desuBoard.getThreadAt.call(0, {from: accounts[1]});
       desuThread = DesuThread.at(threadAddress);
     });
   });

@@ -12,7 +12,7 @@ interface Board {
     /**
      * Event called when new thread is made
      */
-    event NewThread(address poster, Thread thread);
+    event NewThread();
     
     /**
      * Bump a thread. Bumped thread will be top thread on this board.
@@ -32,11 +32,6 @@ interface Board {
      * Get a thread at index provided
      */
     function getThreadAt(uint index) external view returns (Thread thread);
-    
-    /**
-     * Get the first thread
-     */
-    function getFirstThread() external view returns (Thread firstThread);
     
     /**
      * Get a thread array ascending ordered by added time, with maximum size of maxCount

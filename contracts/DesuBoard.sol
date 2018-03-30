@@ -159,24 +159,48 @@ contract DesuBoard is ManageableBoard {
         // Put it to reversal mapping (thread => internalId)
         attachedThreads[newThread] = MapEntry(true, addedId);
 
-        NewThread(msg.sender, newThread);
+        NewThread();
+    }
+
+    function detachThreadByInternalId(uint internalId) external ownerOnlyLockAffectable {
+        require(internalId < listElements.length);  // Exceeding a bound
+
+        uint previousId = listElements[internalId].previous;
+        uint nextId = listElements[internalId].next;
+
+        if (previousId != UINT_LARGEST) {
+            // There is a previous element, it is not the first element in this list
+            // Skip this element and connect the previous element to the next element
+            listElements[previousId].next = nextId;
+        } else first = listElements[internalId].next;   // It is the first element, give the 'first' to next one
+
+        if (nextId != UINT_LARGEST) {
+            // There is a next element, it is not the last element in this list
+            // Skip this element and connet the next element to the previous element
+            listElements[nextId].previous = previousId;
+        } else last = listElements[internalId].previous;// Same as changing first, give the 'last' to next one
+
+        size--;    // Size is decreased by 1
+
+        delete attachedThreads[listElements[internalId].thread];   // Delete this first
+        delete listElements[internalId];    // Delete this after
+
+        // TODO maybe reduce array size??? (internalId will NOT be consistent)
+
+        // Fire thread detached event
+        ThreadDetached();
+    }
+
+    function setLock(bool lockState) external ownerOnly {
+        boardLock = lockState;
+    }
+
+    function destructBoard() external ownerOnly {
+        selfdestruct(owner);
     }
 
     function getThreadAt(uint index) external view returns (Thread thread) {
         return listElements[getInternalIdOfIndex(index)].thread;
-    }
-
-    function getFirstThread() external view returns (Thread thread) {
-        require(first != UINT_LARGEST);
-        return listElements[first].thread;
-    }
-
-    /**
-     * Get the last thread of this board
-     */
-    function getLastThread() external view returns (Thread thread) {
-        require(last != UINT_LARGEST);
-        return listElements[last].thread;
     }
 
     function getNumberOfThreads() external view returns (uint numberOfThreads) {
@@ -258,39 +282,5 @@ contract DesuBoard is ManageableBoard {
 
     function isLocked() external view returns (bool _lock) {
         return boardLock;
-    }
-
-    function detachThreadByInternalId(uint internalId) external ownerOnlyLockAffectable {
-        require(internalId < listElements.length);  // Exceeding a bound
-
-        uint previousId = listElements[internalId].previous;
-        uint nextId = listElements[internalId].next;
-
-        if (previousId != UINT_LARGEST) {
-            // There is a previous element, it is not the first element in this list
-            // Skip this element and connect the previous element to the next element
-            listElements[previousId].next = nextId;
-        } else first = listElements[internalId].next;   // It is the first element, give the 'first' to next one
-
-        if (nextId != UINT_LARGEST) {
-            // There is a next element, it is not the last element in this list
-            // Skip this element and connet the next element to the previous element
-            listElements[nextId].previous = previousId;
-        } else last = listElements[internalId].previous;// Same as changing first, give the 'last' to next one
-
-        size--;    // Size is decreased by 1
-
-        delete attachedThreads[listElements[internalId].thread];   // Delete this first
-        delete listElements[internalId];    // Delete this after
-
-        // TODO maybe reduce array size??? (internalId will NOT be consistent)
-    }
-
-    function setLock(bool lockState) external ownerOnly {
-        boardLock = lockState;
-    }
-
-    function destructBoard() external ownerOnly {
-        selfdestruct(owner);
     }
 }
